@@ -11,6 +11,7 @@ def traceroute(address, repeat, max_ttl,
                request_interval_in_seconds: int,
                timeout, packet_size: int):
     conf.L3socket = L3RawSocket
+    visited = set()
     for i in range(1, max_ttl + 1):
         packet = IP(dst=address, ttl=i) / ICMP(seq=i) / (b'\xff' * packet_size)
         results = {}
@@ -20,9 +21,11 @@ def traceroute(address, repeat, max_ttl,
             end = pc()
             if (response and
                     response.getlayer(ICMP) and
-                    response.getlayer(ICMP).type == 11 and
+                    response.getlayer(ICMP).type in {0, 11} and
                     response.getlayer(ICMP).code == 0):
                 src_ip_address = response.getlayer(IP).src
+                if src_ip_address in visited:
+                    continue
                 if src_ip_address not in results:
                     results[src_ip_address] = []
                 results[src_ip_address].append((end - start) * 1000)
@@ -31,6 +34,7 @@ def traceroute(address, repeat, max_ttl,
             return
         result_line = f'{i}'
         for ip in results:
+            visited.add(ip)
             result_line += f'  {ip}  '
             result_line += '  '.join(
                 map(lambda x: f'{round(x, 3)} ms', results[ip]))

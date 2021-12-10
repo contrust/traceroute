@@ -47,7 +47,8 @@ def parse_terminal_arguments():
         '-s',
         '--size',
         metavar='size',
-        type=partial(_positive_number, number_type=int),
+        type=partial(_positive_not_bigger_than_number, number_type=int,
+                     cmp_number=1472),
         default=60,
         help='icmp data size in bytes, 60 by default'
     )
@@ -64,6 +65,14 @@ def _positive_number(string, number_type):
         return number
     else:
         raise argparse.ArgumentTypeError(f"{string} is not positive number.")
+
+
+def _positive_not_bigger_than_number(string, number_type, cmp_number):
+    number = _positive_number(string, number_type)
+    if number > cmp_number:
+        raise argparse.ArgumentTypeError(
+            f'{number} is bigger than {cmp_number}')
+    return number
 
 
 def main():

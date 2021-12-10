@@ -14,7 +14,8 @@ def parse_terminal_arguments():
         help='ipv4 address or domain for routing')
     parser.add_argument(
         '--timeout',
-        type=partial(_positive_number, number_type=float),
+        type=partial(_number_within_strict_range, number_type=float,
+                     start=0, end=9223372036.854776),
         metavar='time_in_seconds',
         default=1,
         help='response timeout in seconds, 1 second by default'
@@ -23,7 +24,8 @@ def parse_terminal_arguments():
         '-r',
         '--repeat',
         metavar='number_of_requests',
-        type=partial(_positive_number, number_type=int),
+        type=partial(_number_within_strict_range, number_type=int,
+                     start=0, end=float('inf')),
         default=3,
         help='number of requests for each ttl, 3 requests by default'
     )
@@ -31,7 +33,8 @@ def parse_terminal_arguments():
         '-i',
         '--interval',
         metavar='time_in_seconds',
-        type=partial(_positive_number, number_type=float),
+        type=partial(_number_within_strict_range, number_type=float,
+                     start=0, end=9223372036.854776),
         default=0,
         help='interval between requests in seconds, 0 by default'
     )
@@ -39,7 +42,8 @@ def parse_terminal_arguments():
         '-t',
         '--ttl',
         metavar='max_ttl',
-        type=partial(_positive_number, number_type=int),
+        type=partial(_number_within_strict_range, number_type=int,
+                     start=-1, end=float('inf')),
         default=30,
         help='max ttl, 30 by default'
     )
@@ -47,31 +51,26 @@ def parse_terminal_arguments():
         '-s',
         '--size',
         metavar='size',
-        type=partial(_positive_not_bigger_than_number, number_type=int,
-                     cmp_number=1472),
+        type=partial(_number_within_strict_range, number_type=int,
+                     start=-1, end=1473),
         default=60,
         help='icmp data size in bytes, 60 by default'
     )
     return parser.parse_args()
 
 
-def _positive_number(string, number_type):
+def _number_within_strict_range(string, number_type, start, end):
     try:
         number = number_type(string)
     except ValueError:
         raise argparse.ArgumentTypeError(
             f'Can not cast {string} to {number_type}.')
-    if number > 0:
-        return number
-    else:
-        raise argparse.ArgumentTypeError(f"{string} is not positive number.")
-
-
-def _positive_not_bigger_than_number(string, number_type, cmp_number):
-    number = _positive_number(string, number_type)
-    if number > cmp_number:
+    if number <= start:
         raise argparse.ArgumentTypeError(
-            f'{number} is bigger than {cmp_number}')
+            f'{number} is not bigger than {start}')
+    if number >= end:
+        raise argparse.ArgumentTypeError(
+            f'{number} is not less than {end}')
     return number
 
 

@@ -43,7 +43,7 @@ def parse_terminal_arguments():
         '--ttl',
         metavar='max_ttl',
         type=partial(_number_within_strict_range, number_type=int,
-                     start=-1, end=float('inf')),
+                     start=-1, end=256),
         default=30,
         help='max ttl, 30 by default'
     )
